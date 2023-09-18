@@ -1,0 +1,5 @@
+TMPDIR=/tmp
+EXASTRO_URL=http://localhost:8080
+# EXASTRO_USERNAME=administrator
+# EXASTRO_INITIAL_PASSWORD=password
+EXASTRO_NEW_PASSWORD=hogehoge
