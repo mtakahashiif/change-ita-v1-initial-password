@@ -23,15 +23,15 @@ EXASTRO_URL=${EXASTRO_PROTOCOL}://${EXASTRO_HOST}:${EXASTRO_PORT}
 ##############################################################################
 # variables (file paths)
 
-EXASTRO_COOKIE_FILE=${TMPDIR}/cookie-${BASE_SCRIPT_NAME}.txt
-EXASTRO_CURL_OUTPUT_00_FILE=${TMPDIR}/curl-00-${BASE_SCRIPT_NAME}.html
-EXASTRO_CURL_OUTPUT_01_FILE=${TMPDIR}/curl-01-${BASE_SCRIPT_NAME}.html
-EXASTRO_CURL_OUTPUT_02_FILE=${TMPDIR}/curl-02-${BASE_SCRIPT_NAME}.html
-EXASTRO_CURL_OUTPUT_03_FILE=${TMPDIR}/curl-03-${BASE_SCRIPT_NAME}.html
+EXASTRO_COOKIE_FILE=${TMPDIR}/${BASE_SCRIPT_NAME}-cookie.txt
+EXASTRO_CURL_OUTPUT_00_FILE=${TMPDIR}/${BASE_SCRIPT_NAME}-curl-00.html
+EXASTRO_CURL_OUTPUT_01_FILE=${TMPDIR}/${BASE_SCRIPT_NAME}-curl-01.html
+EXASTRO_CURL_OUTPUT_02_FILE=${TMPDIR}/${BASE_SCRIPT_NAME}-curl-02.html
+EXASTRO_CURL_OUTPUT_03_FILE=${TMPDIR}/${BASE_SCRIPT_NAME}-curl-03.html
 
 
 ##############################################################################
-# URL encoding (username/password)
+# variables (URL encoded username and password)
 
 function urlencode() {
     python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "${1}"
@@ -45,6 +45,7 @@ EXASTRO_URL_ENCODED_PASSWORD=$(urlencode ${EXASTRO_PASSWORD})
 ##############################################################################
 # initialize password
 
+# Login dialog
 curl \
     --silent \
     --show-error \
@@ -54,8 +55,11 @@ curl \
     --output ${EXASTRO_CURL_OUTPUT_00_FILE} \
     ${EXASTRO_URL}'/common/common_auth.php?login'
 
+# Get CSRF token by XPath.
+# The stderr is throwed away to suppress warning for invalid child tags (<span> and <div>) in <head>.
 CSRF_TOKEN=$(xmllint --html --xpath 'string(//input[@name="csrf_token"]/@value)' ${EXASTRO_CURL_OUTPUT_00_FILE} 2> /dev/null)
 
+# Send user name and initial password.
 curl \
     --silent \
     --show-error \
@@ -68,8 +72,9 @@ curl \
     --output ${EXASTRO_CURL_OUTPUT_01_FILE} \
     ${EXASTRO_URL}'/common/common_auth.php?login='
 
-# Return "401 not auth" and automatically post by javascript (see blow curl command).
+# Then return "401 not auth" and automatically post by javascript (see blow curl command).
 
+# Automatic POST (why?)
 curl \
     --silent \
     --show-error \
@@ -82,6 +87,7 @@ curl \
     --output ${EXASTRO_CURL_OUTPUT_02_FILE} \
     ${EXASTRO_URL}'/common/common_change_password_form.php?login'
 
+# Send new password.
 curl \
     --silent \
     --show-error \
